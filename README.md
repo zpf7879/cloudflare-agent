@@ -9,7 +9,11 @@ authorizes every call **in code, outside the prompt**:
 | `disable_webhook` | write (reversible) | `integrations:write` | the webhook must belong to the caller's tenant |
 
 Every tool call is also rate limited, keyed on tenant and tool name: 60 reads and 5 writes per
-minute. An agent that follows planted instructions and loops over writes is stopped after five.
+minute. The rate limit cannot tell a planted instruction from a real one; it only limits the
+damage. If an agent holding the write scope follows a planted instruction, its first write to
+its own tenant succeeds, and at most 5 such writes per minute get through. What stops an injected
+write on the first try is the scope check (an agent that reads untrusted content should hold a
+read-only token) and the tenant check.
 
 The identity provider decides a token's scope and tenant. The tool declares the scope it needs.
 The Worker allows the call only if the token's scope covers the tool's scope. The tenant comes
@@ -134,7 +138,9 @@ minutes, and add a live validity check for sensitive writes such as rotating a w
 so a revoked token stops working at once for the riskiest tools.
 
 Also simplified for the slice: the mock origin is in memory, so its state resets whenever the
-Worker restarts, and `rotate_webhook_secret` (the approval-gated write) is not built.
+Worker restarts, and `rotate_webhook_secret` (the approval-gated write) is not built. So the
+slice has no human approval step: a write the token's scope and tenant allow goes through
+without a person confirming it out of band.
 
 ## Documentation relied on for this code
 

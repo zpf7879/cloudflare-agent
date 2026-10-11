@@ -42,8 +42,8 @@ export interface GuardContext {
 /**
  * The shared auth wrapper. Every tool goes through it, so no tool can skip the check.
  * 1. The token's scope must cover the scope the tool declares (reads and writes alike).
- * 2. A rate limit keyed on tenant and tool name. It bounds how much an authorized agent
- *    can do, for example one that follows planted instructions and loops over every webhook.
+ * 2. A rate limit keyed on tenant and tool name. It limits the damage, not the intent: an
+ *    authorized agent that follows planted instructions still gets its first writes through.
  * 3. The tenant comes from the verified token. The tool handler receives it and may only
  *    act on that tenant's data.
  * Nothing here depends on prompt text.

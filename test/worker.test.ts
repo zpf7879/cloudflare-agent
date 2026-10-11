@@ -36,7 +36,7 @@ async function token(opts: { tenant: string; scope: string; expiresIn?: string; 
 		.sign(new TextEncoder().encode(SECRET));
 }
 
-/** Send one JSON-RPC request to the MCP endpoint, exactly as an agent client would. */
+/** Call the Worker's fetch handler in-process with one MCP JSON-RPC request, built as an agent client builds it. */
 async function rpc(bearer: string | null, method: string, params: unknown) {
 	const headers: Record<string, string> = {
 		"content-type": "application/json",

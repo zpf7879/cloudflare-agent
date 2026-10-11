@@ -37,7 +37,11 @@ cp .dev.vars.example .dev.vars     # a local demo secret for the mock identity p
 npm test
 ```
 
-The tests send real MCP requests to the Worker. Two of them show denied writes:
+The tests run in Node.js, not in the Workers runtime: Vitest imports the Worker and calls its
+`fetch` handler directly with MCP JSON-RPC requests. Each request goes through the real code path
+(token check, `createMcpHandler`, the auth wrapper and the tools). Only the rate limiters (an
+in-memory stand-in) and the origin (synthetic, in memory) are mocks. Step 3 runs the Worker for
+real. Two of the tests show denied writes:
 - `DENIED WRITE: a read-only token cannot disable a webhook`
 - `DENIED WRITE: another tenant's webhook is refused even with the write scope`
 
@@ -54,7 +58,9 @@ npm run check:config               # fails if workers.dev, Smart Placement or Wo
                                    # or if the rate limit bindings are missing
 ```
 
-**3. Run the Worker and replay the requests.** Use two terminals.
+**3. Run the Worker and replay the requests.** This runs the Worker in `workerd`, the Workers
+runtime, through `wrangler dev`, with Wrangler's local rate limiters, and sends the requests over
+HTTP. Use two terminals.
 
 ```bash
 # terminal A

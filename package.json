@@ -1,0 +1,31 @@
+{
+  "name": "yunhai-agent-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thin slice: an MCP server on a Cloudflare Worker that authorizes every tool call in code (scope + tenant), on synthetic data.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "token": "node scripts/make-token.mjs",
+    "demo": "node scripts/demo.mjs",
+    "check:config": "node scripts/check-config.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "agents": "^0.28.0",
+    "jose": "^6.2.12",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261011.1",
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.149.0"
+  }
+}

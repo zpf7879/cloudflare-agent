@@ -1,0 +1,6 @@
+node_modules/
+.wrangler/
+.dev.vars
+
+# The assignment brief is not part of the submission
+*.pdf

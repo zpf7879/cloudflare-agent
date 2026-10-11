@@ -1,0 +1,29 @@
+{
+  // One codebase, deployed once per region (Singapore, EU, US), each on its own
+  // Yunhai-owned hostname with the Regional Services region set for that hostname.
+  // The two pipeline preconditions are enforced by `npm run check:config` and by a test.
+  "name": "yunhai-agent-tools",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+
+  // Precondition 1: the workers.dev address is not a regional service, so it is disabled.
+  "workers_dev": false,
+  "preview_urls": false,
+
+  // Precondition 2: Smart Placement stays off, so Cloudflare does not choose where the
+  // Worker runs. This means the "placement" setting must never appear in this file.
+
+  // Built-in Workers Logs store is off. The Worker writes metadata-only records itself.
+  "observability": { "enabled": false },
+
+  // Rate limits, keyed in code on tenant and tool name. Counters are local to each
+  // Cloudflare location and approximate, so they bound blast radius; they are not a quota.
+  // Writes are kept low on purpose: an agent that loops over writes is stopped quickly.
+  "ratelimits": [
+    { "name": "READ_LIMITER", "namespace_id": "1001", "simple": { "limit": 60, "period": 60 } },
+    { "name": "WRITE_LIMITER", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } }
+  ]
+
+  // Production routes are added per region in the deploy pipeline, for example:
+  // "routes": [{ "pattern": "agents-sg.example.invalid", "custom_domain": true }]
+}

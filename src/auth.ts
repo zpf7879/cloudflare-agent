@@ -33,8 +33,9 @@ export async function verifyBearer(header: string | null, secret: string): Promi
 			throw new AuthError("token is missing required claims");
 		}
 		return { sub: payload.sub, tenant, scopes: scope.split(" ").filter(Boolean) };
-	} catch {
-		// One message for every failure, so callers learn nothing about why.
+	} catch (e) {
+		// One message for every failure, so callers learn nothing about why. The operator log keeps the reason.
+		console.log(JSON.stringify({ event: "auth_denied", reason: (e as Error).message }));
 		throw new AuthError("invalid or expired token");
 	}
 }

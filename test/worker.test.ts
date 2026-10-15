@@ -80,6 +80,16 @@ describe("authentication", () => {
 		const t = await token({ tenant: "merlion-logistics", scope: SCOPE_READ, expiresIn: "-1m" });
 		expect((await call(t, "list_integrations")).status).toBe(401);
 	});
+
+	it("rejects a correctly signed token that has no expiry", async () => {
+		const t = await new SignJWT({ tenant: "merlion-logistics", scope: SCOPE_READ })
+			.setProtectedHeader({ alg: "HS256" })
+			.setIssuer(ISSUER)
+			.setAudience(AUDIENCE)
+			.setSubject("agent-1")
+			.sign(new TextEncoder().encode(SECRET)); // no setExpirationTime
+		expect((await call(t, "list_integrations")).status).toBe(401);
+	});
 });
 
 describe("read tool: list_integrations", () => {

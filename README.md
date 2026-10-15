@@ -31,7 +31,7 @@ npm install
 cp .dev.vars.example .dev.vars     # a local demo secret for the mock identity provider
 ```
 
-**1. Run the tests.** Expect `15 passed`.
+**1. Run the tests.** Expect `16 passed`.
 
 ```bash
 npm test
@@ -56,7 +56,7 @@ does not depend on the model behaving. The same planted line naming one of Merli
 would succeed: the tenant check stops cross-tenant writes, not every injected write (see
 "Limitation" below).
 
-There is also a denied read, a missing and an expired token, a check that audit records hold
+There is also a denied read, a missing token, an expired token and one with no expiry at all, a check that audit records hold
 metadata only, three rate-limit tests (`RATE LIMITED: after 5 writes in a window, the next
 disable_webhook is refused`, limits are per tenant and per tool, and a call denied by scope spends
 no quota), and checks of the deploy-pipeline preconditions in `wrangler.jsonc`.

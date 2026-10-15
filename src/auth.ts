@@ -26,6 +26,8 @@ export async function verifyBearer(header: string | null, secret: string): Promi
 			issuer: ISSUER,
 			audience: AUDIENCE,
 			algorithms: ["HS256"],
+			// jose checks exp only when it is present. Require it, so no token lives forever.
+			requiredClaims: ["exp"],
 		});
 		const tenant = payload["tenant"];
 		const scope = payload["scope"];

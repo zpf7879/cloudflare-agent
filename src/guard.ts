@@ -61,8 +61,11 @@ export function guarded<A>(
 		if (!principal) {
 			return deny("no verified caller");
 		}
-		const record: GuardContext["record"] = (outcome, target, reason) =>
+		let recorded = false;
+		const record: GuardContext["record"] = (outcome, target, reason) => {
+			recorded = true;
 			audit({ requestId, tool, kind, tenant: principal.tenant, sub: principal.sub, target, outcome, reason });
+		};
 
 		if (!covers(principal, requiredScope)) {
 			record("denied", undefined, `missing_scope:${requiredScope}`);
@@ -75,6 +78,15 @@ export function guarded<A>(
 			record("denied", undefined, "rate_limited");
 			return deny(`rate limit reached for ${tool}; try again in a minute`);
 		}
-		return handler(args, { principal, requestId, record });
+		// The handler may record details (target, reason). If it records nothing, or throws,
+		// the guard still writes the record, so no tool can leave a call unaudited.
+		try {
+			const result = await handler(args, { principal, requestId, record });
+			if (!recorded) record(result.isError ? "denied" : "allowed");
+			return result;
+		} catch (e) {
+			record("denied", undefined, "handler_error");
+			throw e;
+		}
 	};
 }

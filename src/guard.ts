@@ -39,11 +39,18 @@ export interface GuardContext {
 	record: (outcome: "allowed" | "denied", target?: string, reason?: string) => void;
 }
 
+/** Rate limiters, one per tool kind. `guarded` picks one from the tool's kind. */
+export interface Limiters {
+	read: RateLimit;
+	write: RateLimit;
+}
+
 /**
  * The shared auth wrapper. Every tool goes through it, so no tool can skip the check.
  * 1. The token's scope must cover the scope the tool declares (reads and writes alike).
  * 2. A rate limit keyed on tenant and tool name. It limits the damage, not the intent: an
  *    authorized agent that follows planted instructions still gets its first writes through.
+ *    The limiter is chosen from the tool's kind, so a write tool cannot get the read limit.
  * 3. The tenant comes from the verified token. The tool handler receives it and may only
  *    act on that tenant's data.
  * Nothing here depends on prompt text.
@@ -52,9 +59,10 @@ export function guarded<A>(
 	tool: string,
 	kind: "read" | "write",
 	requiredScope: string,
-	limiter: RateLimit,
+	limits: Limiters,
 	handler: (args: A, ctx: GuardContext) => ToolResult | Promise<ToolResult>,
 ): (args: A) => Promise<ToolResult> {
+	const limiter = limits[kind];
 	return async (args: A) => {
 		const requestId = crypto.randomUUID();
 		const principal = currentPrincipal();

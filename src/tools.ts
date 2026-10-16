@@ -1,14 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { SCOPE_READ, SCOPE_WRITE } from "./auth";
-import { deny, guarded, ok } from "./guard";
+import { deny, guarded, type Limiters, ok } from "./guard";
 import { findWebhook, listIntegrations, setWebhookEnabled } from "./origin";
-
-/** Rate limiters, one per tool kind. Each is keyed on tenant and tool name in `guarded`. */
-export interface Limiters {
-	read: RateLimit;
-	write: RateLimit;
-}
 
 /** A fresh server per request. The Worker keeps no MCP session and stores nothing at rest. */
 export function createServer(limits: Limiters): McpServer {
@@ -21,7 +15,7 @@ export function createServer(limits: Limiters): McpServer {
 			description: "List the integrations of the caller's own tenant. Returns ids and webhook status only.",
 			inputSchema: {},
 		},
-		guarded("list_integrations", "read", SCOPE_READ, limits.read, (_args: Record<string, never>, ctx) => {
+		guarded("list_integrations", "read", SCOPE_READ, limits, (_args: Record<string, never>, ctx) => {
 			const rows = listIntegrations(ctx.principal.tenant).map((i) => ({
 				id: i.id,
 				name: i.name,
@@ -42,7 +36,7 @@ export function createServer(limits: Limiters): McpServer {
 				"Disable one webhook of the caller's own tenant. Reversible. Fails if the webhook does not belong to the caller's tenant.",
 			inputSchema: { webhook_id: z.string().min(1).max(64) },
 		},
-		guarded("disable_webhook", "write", SCOPE_WRITE, limits.write, ({ webhook_id }: { webhook_id: string }, ctx) => {
+		guarded("disable_webhook", "write", SCOPE_WRITE, limits, ({ webhook_id }: { webhook_id: string }, ctx) => {
 			const hook = findWebhook(webhook_id);
 			// Same answer for "does not exist" and "belongs to someone else", so nothing leaks.
 			if (!hook || hook.tenant !== ctx.principal.tenant) {
